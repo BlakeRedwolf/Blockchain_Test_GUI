@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+
+  <link rel="stylesheet" type="text/css" href="main.css">
+
+  <script src="./node_modules/web3/dist/web3.min.js"></script>
+
+</head>
+
+<body>
+  <div class="container">
+    <img id="ethlogo" src="https://www.ethereum.org/images/logos/ETHEREUM-LOGO_PORTRAIT_Black_small.png" alt="">
+    <h1><b>Blockchain Test GUI</b></h1>
+    <h2>by Blake R.</h2>
+    <img id="metamask" src="https://metamask.io/img/metamask.png" alt="">
+    <p>This test application interface uses your smart contact's function modifiers to visually confirm that the contract owner successfully set data to the blockchain. Getter's can be viewed via the <a href="https://remix.ethereum.org/">Remix Solidity IDE</a>      Built on the Ethereum Smart Contract Platform.</p>
+
+    <br>
+    <span id="countIns"></span>
+
+    <h2 id="instructor"></h2>
+    <span id="insTrans"></span>
+    <!-- Display Block Cache -->
+    <hr>
+
+    <img id="loader" src="https://loading.io/spinners/double-ring/lg.double-ring-spinner.gif">
+
+    <label for="fName" class="col-lg-2 control-label">First Name</label>
+    <input id="fName" type="text">
+
+    <label for="lName" class="col-lg-2 control-label">Last Name</label>
+    <input id="lName" type="text">
+
+    <label for="age" class="col-lg-2 control-label">Owner Age</label>
+    <input id="age" type="text">
+
+    <button id="button">Update Transaction Owner</button>
+
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+
+  <script>
+    if (typeof web3 !== 'undefined') {
+      web3 = new Web3(web3.currentProvider);
+    } else {
+      // set the provider you want from Web3.providers
+      web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+    }
+
+    web3.eth.defaultAccount = web3.eth.accounts[0];
+
+    var CoursetroContract = web3.eth.contract([{
+      "constant": true,
+      "inputs": [{
+        "name": "",
+        "type": "uint256"
+      }],
+      "name": "instructorAccts",
+      "outputs": [{
+        "name": "",
+        "type": "address"
+      }],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }, {
+      "constant": true,
+      "inputs": [],
+      "name": "getInstructors",
+      "outputs": [{
+        "name": "",
+        "type": "address[]"
+      }],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }, {
+      "constant": true,
+      "inputs": [{
+        "name": "_address",
+        "type": "address"
+      }],
+      "name": "getInstructor",
+      "outputs": [{
+        "name": "",
+        "type": "uint256"
+      }, {
+        "name": "",
+        "type": "bytes16"
+      }, {
+        "name": "",
+        "type": "bytes16"
+      }],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }, {
+      "constant": true,
+      "inputs": [],
+      "name": "countInstructors",
+      "outputs": [{
+        "name": "",
+        "type": "uint256"
+      }],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }, {
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "fName",
+        "type": "bytes16"
+      }, {
+        "indexed": false,
+        "name": "lName",
+        "type": "bytes16"
+      }, {
+        "indexed": false,
+        "name": "age",
+        "type": "uint256"
+      }],
+      "name": "instructorInfo",
+      "type": "event"
+    }, {
+      "constant": false,
+      "inputs": [{
+        "name": "_address",
+        "type": "address"
+      }, {
+        "name": "_age",
+        "type": "uint256"
+      }, {
+        "name": "_fName",
+        "type": "bytes16"
+      }, {
+        "name": "_lName",
+        "type": "bytes16"
+      }],
+      "name": "setInstructor",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }]);
+
+    var Coursetro = CoursetroContract.at('0xf860be1d81e5626280d618da12239f07900ca29c');
+    console.log(Coursetro);
+
+    var instructorEvent = Coursetro.instructorInfo({}, 'latest'); // This {}, 'latest' is needed for deployment on ropsin network
+
+    instructorEvent.watch(function(error, result) {
+      if (!error) {
+        if (result.blockHash != $("#insTrans").html())
+          $("#loader").hide();
+        $("#insTrans").html('Block hash: ' + result.blockHash);
+        $("#instructor").html(web3.toAscii(result.args.fName) + ' ' + web3.toAscii(result.args.lName) + '(' + result.args.age + ' years old)');
+      } else {
+        $("#loader").hide();
+        console.log(error);
+      }
+    });
+
+    Coursetro.countInstructors((err, res) => {
+      if (res)
+        $("#countIns").html(res.c + ' <b>: Transactions on blockchain</b>');
+    });
+
+    $("#button").click(function() {
+      Coursetro.setInstructor(web3.eth.defaultAccount, $("#age").val(), $("#fName").val(), $("#fName").val(), (err, res) => {
+        if (err) {
+          $("#loader").hide();
+        }
+      });
+      $("#loader").show();
+    });
+  </script>
+
+</body>
+
+</html>
